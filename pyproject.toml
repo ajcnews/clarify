@@ -13,3 +13,10 @@ dependencies = [
     "six",
     "wheel"
 ]
+dynamic = [
+    "classifiers",
+    "keywords",
+    "description",
+    "readme",
+    "authors"
+]
