@@ -1,7 +1,5 @@
 import concurrent.futures
 
-from six.moves.urllib import parse
-
 import re
 import requests
 from requests_futures.sessions import FuturesSession
@@ -85,14 +83,18 @@ class Jurisdiction(object):
 
     @classmethod
     def construct_url(cls, parsed_url, path, include_version=True):
-        url_parts = []
+        """
+        Returns a URL string based on the parsed_url, path and
+        version (if include_version=True)
+        """
+        url_str = ""
         for key in ['base_uri', 'state_id', 'jurisdiction_name', 'election_id']:
             if key in parsed_url:
-                url_parts.append(parsed_url[key])
+                url_str += f"{parsed_url[key]}/"
         if include_version and 'version' in parsed_url:
-            url_parts.append(parsed_url['version'])
-        url_parts.append(path)
-        return parse.urlunsplit(url_parts)
+            url_str += f"{parsed_url['version']}/"
+        url_str += path
+        return url_str
 
     @classmethod
     def get_current_ver(cls, election_url):
