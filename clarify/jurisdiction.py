@@ -37,6 +37,8 @@ class Jurisdiction(object):
     additional information about those results.
     """
 
+    _response_cache = {}
+
     def __init__(self, url, level, name=''):
         """
         To create an instance, pass a Clarity results URL for the top-level
@@ -106,7 +108,7 @@ class Jurisdiction(object):
             # if we have already seen a 200-status response
             if ret is None:
                 current_ver_url = cls.construct_url(parsed_url, filename, include_version=False)
-                current_ver_response = requests.get(current_ver_url, headers=UA_HEADER)
+                current_ver_response = cls.get_response(current_ver_url)
                 try:
                     current_ver_response.raise_for_status()
                     ret = current_ver_response.text
@@ -292,6 +294,31 @@ class Jurisdiction(object):
             segment = tree.xpath("//script")[0].values()[0].split('/')[1]
         return '/' + segment + '/en/summary.html'
 
+    @classmethod
+    def get_response(cls, file_url):
+        """
+        Returns a response object.
+        If file_url exists in _response_cache, return cached response.
+        Else:
+            - Fetch file_url
+            - add response to _response_cache
+            - if the request fails, mock a 404 response (file_url could have been None)
+            - return response
+        """
+
+        response = None
+        if file_url not in cls._response_cache:
+            try:
+                response = requests.get(file_url, headers=UA_HEADER)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                # Create a mock response for error handling
+                response = requests.models.Response()
+                response.status_code = 404 # Assume not found if error
+            cls._response_cache[file_url] = response
+
+        return cls._response_cache[file_url]
+
     def _get_report_url(self, fmt):
         """
         Return the url for the report in a given format without checking to see if it is valid.
@@ -301,30 +328,30 @@ class Jurisdiction(object):
     def report_url(self, fmt):
         """
         Returns link to detailed report depending on format. Formats are xls, txt and xml.
+        Returns None if URL is unreachable
         """
         url = self._get_report_url(fmt)
-        r = requests.get(url, headers=UA_HEADER)
-        if r.status_code == 200:
+        if self.get_response(url):
             return url
-        else:
-            return None
+        return None
 
     def download_report(self, fmt, output_fn):
         """
         Downloads the selected report and saves it with the given output filename.
         """
         url = self._get_report_url(fmt)
-        r = requests.get(url, headers=UA_HEADER)
-        with open(output_fn, 'wb') as f:
-            f.write(r.content)
+        response = self.get_response(url)
+
+        if response:
+            with open(output_fn, 'wb') as f:
+                f.write(response.content)
 
     def _get_summary_url(self):
         """
         Returns the summary report URL for a jurisdiction.
         """
         url = self.construct_url(self.parsed_url, "reports/summary.zip")
-        r = requests.get(url, headers=UA_HEADER)
-        if r.status_code == 200:
-            return url
-        else:
+        r = self.get_response(url)
+        if not r or r.status_code != 200:
             return None
+        return url
