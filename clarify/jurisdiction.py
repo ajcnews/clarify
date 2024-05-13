@@ -1,10 +1,13 @@
 import concurrent.futures
 
 import re
+import os
 import requests
 from requests_futures.sessions import FuturesSession
 import lxml.html
 from lxml.cssselect import CSSSelector
+from zipfile import ZipFile
+from io import BytesIO
 
 # base_uri is the path prefix including the folloing named groups:
 # - state_id (required)
@@ -345,6 +348,26 @@ class Jurisdiction(object):
         if response:
             with open(output_fn, 'wb') as f:
                 f.write(response.content)
+
+    # TODO: write tests for this
+    def extract_and_download_report(self, fmt, output_dir=''):
+        """
+        Extracts the detail file from the enclosing .zip,
+        renames it by state or jurisdiction
+        and downloads the file to output_dir
+        """
+        url = self._get_report_url(fmt)
+        response = self.fetch_response(url)
+        if response: # <Response [404]> is falsey apparently
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+            with ZipFile(BytesIO(response.content)) as z0:
+                with z0.open(f'detail.{fmt}') as f0:
+                    contents = f0.read()
+                    filename = self.parsed_url.get("state_id", '') if self.level == "state" else self.name
+                    # Write the XML file to the county_results folder
+                    with open(f"{output_dir}/{filename}.{fmt}", 'wb') as f3:
+                        f3.write(contents)
 
     def _get_summary_url(self):
         """

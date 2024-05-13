@@ -45,6 +45,11 @@ The `Jurisdiction` object also provides access to any sub-jurisdiction details, 
 'https://results.enr.clarityelections.com/GA/Baldwin/63997/183266/reports/detailxml.zip'
 ```
 
+To download a jurisdiction or subjurisdiction's results file and extract the contents from the .zip:
+
+```
+>>> j.extract_and_download_report(format, output_directory)
+```
 ### Parser
 
 Clarify's `Parser` class accepts a file or file-like object representing the unzipped election results file in XML format and parses it into Python objects containing details about specific elections (which are called contests in the schema) and results.  The parser only handles the parsing of the XML into objects which make the election data easy to access.  the user needs to handle the downloading and un-zipping portion of the workflow.
