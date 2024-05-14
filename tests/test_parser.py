@@ -1,21 +1,21 @@
 import datetime
-import unittest
+import pytest
 
 import lxml.etree
 
 from clarify.parser import (Parser, ResultJurisdiction)
 
 
-class TestParser(unittest.TestCase):
+class TestParser():
 
     def test__underscore_to_camel(self):
-        self.assertEqual(Parser._underscore_to_camel(""), "")
-        self.assertEqual(Parser._underscore_to_camel("test"), "test")
-        self.assertEqual(Parser._underscore_to_camel("test_again"), "testAgain")
-        self.assertEqual(Parser._underscore_to_camel("test_again_but_longer"), "testAgainButLonger")
-        self.assertEqual(Parser._underscore_to_camel("_test_again"), "TestAgain")  # XXX: Is this what we expect?
-        self.assertEqual(Parser._underscore_to_camel("testing_123"), "testing123")
-        self.assertEqual(Parser._underscore_to_camel("testing_123_again"), "testing123Again")
+        assert Parser._underscore_to_camel("") == ""
+        assert Parser._underscore_to_camel("test") == "test"
+        assert Parser._underscore_to_camel("test_again") == "testAgain"
+        assert Parser._underscore_to_camel("test_again_but_longer") == "testAgainButLonger"
+        assert Parser._underscore_to_camel("_test_again") == "TestAgain"  # XXX: Is this what we expect?
+        assert Parser._underscore_to_camel("testing_123") == "testing123"
+        assert Parser._underscore_to_camel("testing_123_again") == "testing123Again"
 
     def test__parse_result_jurisdiction(self):
         tag_name = "County"
@@ -34,27 +34,27 @@ class TestParser(unittest.TestCase):
 
         result_jurisdiction = Parser._parse_result_jurisdiction(result_jurisdiction_element)
 
-        self.assertIsInstance(result_jurisdiction, ResultJurisdiction)
+        assert isinstance(result_jurisdiction, ResultJurisdiction)
 
-        self.assertTrue(hasattr(result_jurisdiction, "level"))
-        self.assertTrue(hasattr(result_jurisdiction, "name"))
-        self.assertTrue(hasattr(result_jurisdiction, "total_voters"))
-        self.assertTrue(hasattr(result_jurisdiction, "ballots_cast"))
-        self.assertTrue(hasattr(result_jurisdiction, "voter_turnout"))
-        self.assertTrue(hasattr(result_jurisdiction, "percent_reporting"))
-        self.assertTrue(hasattr(result_jurisdiction, "precincts_participating"))
-        self.assertTrue(hasattr(result_jurisdiction, "precincts_reported"))
-        self.assertTrue(hasattr(result_jurisdiction, "precincts_reporting_percent"))
+        assert hasattr(result_jurisdiction, "level")
+        assert hasattr(result_jurisdiction, "name")
+        assert hasattr(result_jurisdiction, "total_voters")
+        assert hasattr(result_jurisdiction, "ballots_cast")
+        assert hasattr(result_jurisdiction, "voter_turnout")
+        assert hasattr(result_jurisdiction, "percent_reporting")
+        assert hasattr(result_jurisdiction, "precincts_participating")
+        assert hasattr(result_jurisdiction, "precincts_reported")
+        assert hasattr(result_jurisdiction, "precincts_reporting_percent")
 
-        self.assertEqual(result_jurisdiction.level, tag_name.lower())
-        self.assertEqual(result_jurisdiction.name, attributes["name"])
-        self.assertEqual(result_jurisdiction.total_voters, int(attributes["totalVoters"]))
-        self.assertEqual(result_jurisdiction.ballots_cast, int(attributes["ballotsCast"]))
-        self.assertEqual(result_jurisdiction.voter_turnout, float(attributes["voterTurnout"]))
-        self.assertEqual(result_jurisdiction.percent_reporting, float(attributes["percentReporting"]))
-        self.assertEqual(result_jurisdiction.precincts_participating, float(attributes["precinctsParticipating"]))
-        self.assertEqual(result_jurisdiction.precincts_reported, float(attributes["precinctsReported"]))
-        self.assertEqual(result_jurisdiction.precincts_reporting_percent, float(attributes["precinctsReportingPercent"]))
+        assert result_jurisdiction.level == tag_name.lower()
+        assert result_jurisdiction.name == attributes["name"]
+        assert result_jurisdiction.total_voters == int(attributes["totalVoters"])
+        assert result_jurisdiction.ballots_cast == int(attributes["ballotsCast"])
+        assert result_jurisdiction.voter_turnout == float(attributes["voterTurnout"])
+        assert result_jurisdiction.percent_reporting == float(attributes["percentReporting"])
+        assert result_jurisdiction.precincts_participating == float(attributes["precinctsParticipating"])
+        assert result_jurisdiction.precincts_reported == float(attributes["precinctsReported"])
+        assert result_jurisdiction.precincts_reporting_percent == float(attributes["precinctsReportingPercent"])
 
     def test__get_or_create_result_jurisdiction(self):
         result_jurisdiction_name = "Test"
@@ -63,20 +63,20 @@ class TestParser(unittest.TestCase):
 
         parser = Parser()
 
-        self.assertEqual(parser._result_jurisdictions, [])
-        self.assertEqual(parser._result_jurisdiction_lookup, {})
+        assert parser._result_jurisdictions == []
+        assert parser._result_jurisdiction_lookup == {}
 
         # Test the "create" part.
         parser._get_or_create_result_jurisdiction(result_jurisdiction_element)
 
-        self.assertEqual(parser._result_jurisdictions, [ result_jurisdiction ])
-        self.assertEqual(parser._result_jurisdiction_lookup, { result_jurisdiction_name: result_jurisdiction })
+        assert parser._result_jurisdictions == [ result_jurisdiction ]
+        assert parser._result_jurisdiction_lookup == { result_jurisdiction_name: result_jurisdiction }
 
         # Test the "get" part.
         parser._get_or_create_result_jurisdiction(result_jurisdiction_element)
 
-        self.assertEqual(parser._result_jurisdictions, [ result_jurisdiction ])
-        self.assertEqual(parser._result_jurisdiction_lookup, { result_jurisdiction_name: result_jurisdiction })
+        assert parser._result_jurisdictions == [ result_jurisdiction ]
+        assert parser._result_jurisdiction_lookup == { result_jurisdiction_name: result_jurisdiction }
 
     def test_add_result_jurisdiction(self):
         result_jurisdiction_name = "Test"
@@ -94,16 +94,16 @@ class TestParser(unittest.TestCase):
 
         parser = Parser()
 
-        self.assertEqual(parser._result_jurisdictions, [])
-        self.assertEqual(parser._result_jurisdiction_lookup, {})
+        assert parser._result_jurisdictions == []
+        assert parser._result_jurisdiction_lookup == {}
 
         parser.add_result_jurisdiction(result_jurisdiction)
 
-        self.assertEqual(parser._result_jurisdictions, [ result_jurisdiction ])
-        self.assertEqual(parser._result_jurisdiction_lookup, { result_jurisdiction_name: result_jurisdiction })
+        assert parser._result_jurisdictions == [ result_jurisdiction ]
+        assert parser._result_jurisdiction_lookup == { result_jurisdiction_name: result_jurisdiction }
 
 
-class TestPrecinctParser(unittest.TestCase):
+class TestPrecinctParser():
     def test_parse(self):
         num_precincts = 33
         num_candidates = 5
@@ -117,60 +117,60 @@ class TestPrecinctParser(unittest.TestCase):
         er = Parser()
         er.parse('tests/data/precinct.xml')
 
-        self.assertEqual(er.timestamp.replace(tzinfo=None), datetime.datetime(2014, 5, 20, 20, 19, 21))
-        self.assertEqual(er.election_name, "2014 Primary Election")
-        self.assertEqual(er.election_date, datetime.date(2014, 5, 20))
-        self.assertEqual(er.region, "Greenup")
-        self.assertEqual(er.total_voters, 28162)
-        self.assertEqual(er.ballots_cast, 5926)
-        self.assertEqual(er.voter_turnout, 21.04)
+        assert er.timestamp.replace(tzinfo=None) == datetime.datetime(2014, 5, 20, 20, 19, 21)
+        assert er.election_name == "2014 Primary Election"
+        assert er.election_date == datetime.date(2014, 5, 20)
+        assert er.region == "Greenup"
+        assert er.total_voters == 28162
+        assert er.ballots_cast == 5926
+        assert er.voter_turnout == 21.04
 
-        self.assertEqual(len(er.result_jurisdictions), num_precincts)
+        assert len(er.result_jurisdictions) == num_precincts
         precinct = next(p for p in er.result_jurisdictions if p.name == 'A105')
-        self.assertEqual(precinct.total_voters, 0)
-        self.assertEqual(precinct.ballots_cast, 171)
-        self.assertEqual(precinct.voter_turnout, 0)
-        self.assertEqual(precinct.percent_reporting, 4)
+        assert precinct.total_voters == 0
+        assert precinct.ballots_cast == 171
+        assert precinct.voter_turnout == 0
+        assert precinct.percent_reporting == 4
 
-        self.assertEqual(len(er.contests), 1)
+        assert len(er.contests) == 1
 
-        self.assertEqual(len(er.results), num_expected_results)
+        assert len(er.results) == num_expected_results
 
         result_jurisdiction_name = "A105"
         result_jurisdiction = er.get_result_jurisdiction(result_jurisdiction_name)
 
-        self.assertEqual(str(result_jurisdiction), result_jurisdiction_name)
-        self.assertEqual(result_jurisdiction.name, result_jurisdiction_name)
-        self.assertEqual(result_jurisdiction.total_voters, 0)
-        self.assertEqual(result_jurisdiction.ballots_cast, 171)
-        self.assertEqual(result_jurisdiction.voter_turnout, 0)
-        self.assertEqual(result_jurisdiction.percent_reporting, 4)
+        assert str(result_jurisdiction) == result_jurisdiction_name
+        assert result_jurisdiction.name == result_jurisdiction_name
+        assert result_jurisdiction.total_voters == 0
+        assert result_jurisdiction.ballots_cast == 171
+        assert result_jurisdiction.voter_turnout == 0
+        assert result_jurisdiction.percent_reporting == 4
 
-        self.assertEqual(result_jurisdiction, precinct)
+        assert result_jurisdiction == precinct
 
         contest_text = "US Senator - REPUBLICAN"
         contest = er.get_contest(contest_text)
 
-        self.assertEqual(str(contest), contest_text)
-        self.assertEqual(contest.text, contest_text)
-        self.assertEqual(contest.key, "4")
-        self.assertEqual(contest.vote_for, 1)
-        self.assertFalse(contest.is_question)
-        self.assertEqual(contest.precincts_reporting, 32)
-        self.assertEqual(contest.precincts_reported, 32)
+        assert str(contest) == contest_text
+        assert contest.text == contest_text
+        assert contest.key == "4"
+        assert contest.vote_for == 1
+        assert not contest.is_question
+        assert contest.precincts_reporting == 32
+        assert contest.precincts_reported == 32
 
         contest_choice_text = "Matt BEVIN"
         contest_choice = contest.choices[0]
 
-        self.assertEqual(contest_choice.contest, contest)
+        assert contest_choice.contest == contest
 
-        self.assertEqual(str(contest_choice), contest_choice_text)
-        self.assertEqual(contest_choice.text, contest_choice_text)
-        self.assertEqual(contest_choice.key, "1")
-        self.assertEqual(contest_choice.total_votes, 820)
+        assert str(contest_choice) == contest_choice_text
+        assert contest_choice.text == contest_choice_text
+        assert contest_choice.key == "1"
+        assert contest_choice.total_votes == 820
 
 
-class TestCountyParser(unittest.TestCase):
+class TestCountyParser():
 
     def test_parse(self):
         num_counties = 75
@@ -185,60 +185,60 @@ class TestCountyParser(unittest.TestCase):
         er = Parser()
         er.parse('tests/data/county.xml')
 
-        self.assertEqual(er.timestamp.replace(tzinfo=None), datetime.datetime(2014, 11, 13, 14, 58, 41))
-        self.assertEqual(er.election_name, "2014 General Election")
-        self.assertEqual(er.election_date, datetime.date(2014, 11, 4))
-        self.assertEqual(er.region, "AR")
-        self.assertEqual(er.total_voters, 1690577)
-        self.assertEqual(er.ballots_cast, 850615)
-        self.assertEqual(er.voter_turnout, 50.32)
+        assert er.timestamp.replace(tzinfo=None) == datetime.datetime(2014, 11, 13, 14, 58, 41)
+        assert er.election_name == "2014 General Election"
+        assert er.election_date == datetime.date(2014, 11, 4)
+        assert er.region == "AR"
+        assert er.total_voters == 1690577
+        assert er.ballots_cast == 850615
+        assert er.voter_turnout == 50.32
 
-        self.assertEqual(len(er.result_jurisdictions), num_counties)
+        assert len(er.result_jurisdictions) == num_counties
         county = next(c for c in er.result_jurisdictions if c.name == 'Arkansas')
-        self.assertEqual(county.total_voters, 10196)
-        self.assertEqual(county.ballots_cast, 5137)
-        self.assertEqual(county.voter_turnout, 50.38)
-        self.assertEqual(county.precincts_participating, 30)
-        self.assertEqual(county.precincts_reporting_percent, 100.0)
+        assert county.total_voters == 10196
+        assert county.ballots_cast == 5137
+        assert county.voter_turnout == 50.38
+        assert county.precincts_participating == 30
+        assert county.precincts_reporting_percent == 100.0
 
-        self.assertEqual(len(er.contests), 1)
+        assert len(er.contests) == 1
 
-        self.assertEqual(len(er.results), num_expected_results)
+        assert len(er.results) == num_expected_results
 
         result_jurisdiction_name = "Arkansas"
         result_jurisdiction = er.get_result_jurisdiction(result_jurisdiction_name)
 
-        self.assertEqual(str(result_jurisdiction), result_jurisdiction_name)
-        self.assertEqual(result_jurisdiction.name, result_jurisdiction_name)
-        self.assertEqual(result_jurisdiction.total_voters, 10196)
-        self.assertEqual(result_jurisdiction.ballots_cast, 5137)
-        self.assertEqual(result_jurisdiction.voter_turnout, 50.38)
-        self.assertEqual(result_jurisdiction.precincts_participating, 30)
-        self.assertEqual(result_jurisdiction.precincts_reported, 30)
-        self.assertEqual(result_jurisdiction.precincts_reporting_percent, 100.0)
+        assert str(result_jurisdiction) == result_jurisdiction_name
+        assert result_jurisdiction.name == result_jurisdiction_name
+        assert result_jurisdiction.total_voters == 10196
+        assert result_jurisdiction.ballots_cast == 5137
+        assert result_jurisdiction.voter_turnout == 50.38
+        assert result_jurisdiction.precincts_participating == 30
+        assert result_jurisdiction.precincts_reported == 30
+        assert result_jurisdiction.precincts_reporting_percent == 100.0
 
-        self.assertEqual(result_jurisdiction, county)
+        assert result_jurisdiction == county
 
         contest_text = "U.S. Senate"
         contest = er.get_contest(contest_text)
 
-        self.assertEqual(str(contest), contest_text)
-        self.assertEqual(contest.text, contest_text)
-        self.assertEqual(contest.key, "100")
-        self.assertEqual(contest.vote_for, 1)
-        self.assertFalse(contest.is_question)
-        self.assertEqual(contest.counties_participating, 75)
-        self.assertEqual(contest.counties_reported, 75)
-        self.assertEqual(contest.precincts_participating, 2655)
-        self.assertEqual(contest.precincts_reported, 2655)
+        assert str(contest) == contest_text
+        assert contest.text == contest_text
+        assert contest.key == "100"
+        assert contest.vote_for == 1
+        assert not contest.is_question
+        assert contest.counties_participating == 75
+        assert contest.counties_reported == 75
+        assert contest.precincts_participating == 2655
+        assert contest.precincts_reported == 2655
 
         contest_choice_text = "Tom Cotton"
         contest_choice = contest.choices[0]
 
-        self.assertEqual(contest_choice.contest, contest)
+        assert contest_choice.contest == contest
 
-        self.assertEqual(str(contest_choice), contest_choice_text)
-        self.assertEqual(contest_choice.text, contest_choice_text)
-        self.assertEqual(contest_choice.key, "001")
-        self.assertEqual(contest_choice.party, "REP")
-        self.assertEqual(contest_choice.total_votes, 477734)
+        assert str(contest_choice) == contest_choice_text
+        assert contest_choice.text == contest_choice_text
+        assert contest_choice.key == "001"
+        assert contest_choice.party == "REP"
+        assert contest_choice.total_votes == 477734

@@ -2,11 +2,7 @@ import os
 import os.path
 import re
 
-from unittest import TestCase
-
-# Require TestCase to have subTest().
-if not hasattr(TestCase, "subTest"):
-    from unittest2 import TestCase
+import pytest
 
 import responses
 
@@ -178,7 +174,7 @@ def mock_subjurisdiction_redirect_page_meta(page_id):
     return tpl.format(page_id=page_id)
 
 
-class TestJurisdiction(TestCase):
+class TestJurisdiction():
     # Test the constructor
     def test_construct(self):
         """
@@ -186,7 +182,7 @@ class TestJurisdiction(TestCase):
         """
         url = 'https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html'
         jurisdiction = Jurisdiction(url=url, level='state')
-        self.assertEqual(jurisdiction.url, url)
+        assert jurisdiction.url == url
 
     def test_construct_valid_county(self):
         """
@@ -194,7 +190,7 @@ class TestJurisdiction(TestCase):
         """
         url = 'https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html'
         jurisdiction = Jurisdiction(url=url, level='county')
-        self.assertEqual(jurisdiction.url, url)
+        assert jurisdiction.url == url
 
     def test_construct_valid_city(self):
         """
@@ -202,7 +198,7 @@ class TestJurisdiction(TestCase):
         """
         url = 'https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html'
         jurisdiction = Jurisdiction(url=url, level='city')
-        self.assertEqual(jurisdiction.url, url)
+        assert jurisdiction.url == url
 
     def test_construct_valid_precinct(self):
         """
@@ -210,7 +206,7 @@ class TestJurisdiction(TestCase):
         """
         url = 'https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html'
         jurisdiction = Jurisdiction(url=url, level='precinct')
-        self.assertEqual(jurisdiction.url, url)
+        assert jurisdiction.url == url
 
     def test_construct_valid_url_stringlike(self):
         """
@@ -218,21 +214,21 @@ class TestJurisdiction(TestCase):
         """
         url = Stringlike('https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html')
         jurisdiction = Jurisdiction(url=url, level='state')
-        self.assertEqual(jurisdiction.url, str(url))
+        assert jurisdiction.url == str(url)
 
     def test_construct_invalid_url_notstringlike(self):
         """
         A Jurisdiction with a valid, supported URL and level string should raise a TypeError.
         """
         url = NotStringlike('https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html')
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             Jurisdiction(url=url, level='state')
 
     def test_construct_invalid_url_type(self):
         """
         A Jurisdiction with an invalid URL data type should raise an Exception.
         """
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             Jurisdiction(url=None, level='state')
 
     def test_construct_invalid_hostname(self):
@@ -240,7 +236,7 @@ class TestJurisdiction(TestCase):
         A Jurisdiction with an unsupported hostname in the URL should raise an Exception.
         """
         url = 'https://bad.hostname/KY/15261/30235/en/summary.html'
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             Jurisdiction(url=url, level='state')
 
     def test_construct_no_level(self):
@@ -248,7 +244,7 @@ class TestJurisdiction(TestCase):
         A Jurisdiction with a valid, supported hostname but no level in the URL should raise an Exception.
         """
         url = 'https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html'
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             Jurisdiction(url=url)
 
     def test_construct_invalid_level_str(self):
@@ -256,7 +252,7 @@ class TestJurisdiction(TestCase):
         A Jurisdiction with a valid, supported hostname but an invalid level in the URL should raise an Exception.
         """
         url = 'https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html'
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             Jurisdiction(url=url, level='foo')
 
 
@@ -302,27 +298,27 @@ class TestJurisdiction(TestCase):
         jurisdictions = jurisdiction.get_subjurisdictions()
         # Kentucky has 120 counties
         expected_jurisdiction_count = 120
-        self.assertEqual(len(jurisdictions), expected_jurisdiction_count)
+        assert len(jurisdictions) == expected_jurisdiction_count
         for jurisdiction in jurisdictions:
             # The sub-jurisdictions of a state are counties
-            self.assertEqual(jurisdiction.level, 'county')
+            assert jurisdiction.level == 'county'
             # The sub-jurisdictions should have a url attribute set
-            self.assertIsNotNone(jurisdiction.url)
+            assert jurisdiction.url is not None
             # And it matches the expected pattern
-            self.assertIsNotNone(COUNTY_URL_RE.match(jurisdiction.url))
+            assert COUNTY_URL_RE.match(jurisdiction.url) is not None
 
     def test_scrape_subjurisdiction_summary_path(self):
         # Test HTML that uses JavaScript to redirect to the subjurisdiction
         # summary page.
         html = mock_subjurisdiction_redirect_page_script(129035)
         path = Jurisdiction._scrape_subjurisdiction_summary_path(html)
-        self.assertEqual(path, "/129035/en/summary.html")
+        assert path == "/129035/en/summary.html"
 
         # Test HTML that uses a meta tag to redirect to the subjurisdiction
         # summary page.
         html = mock_subjurisdiction_redirect_page_meta(27401)
         path = Jurisdiction._scrape_subjurisdiction_summary_path(html)
-        self.assertEqual(path, "/27401/en/summary.html")
+        assert path == "/27401/en/summary.html"
 
     def test_get_subjurisdictions_invalid(self):
         """An invalid jurisdiction should return an empty list"""
@@ -331,7 +327,7 @@ class TestJurisdiction(TestCase):
         subjurisdictions = jurisdiction.get_subjurisdictions()
         # An invalid jurisdiction has no sub-jurisdictions with results
         expected_subjurisdiction_count = 0
-        self.assertEqual(len(subjurisdictions), expected_subjurisdiction_count)
+        assert len(subjurisdictions) == expected_subjurisdiction_count
 
     def test_get_sub_jurisdictions_none(self):
         """A jurisdiction with no sub-jurisdictions should return an empty list"""
@@ -341,7 +337,7 @@ class TestJurisdiction(TestCase):
         jurisdictions = jurisdiction.get_subjurisdictions()
         # A city has no sub-jurisdictions with results
         expected_jurisdiction_count = 0
-        self.assertEqual(len(jurisdictions), expected_jurisdiction_count)
+        assert len(jurisdictions) == expected_jurisdiction_count
 
     def test_get_sub_jurisdictions_none_web01(self):
         """A jurisdiction with no sub-jurisdictions with Web01 in url should return an empty list"""
@@ -351,7 +347,7 @@ class TestJurisdiction(TestCase):
         jurisdictions = jurisdiction.get_subjurisdictions()
         # A city has no sub-jurisdictions with results
         expected_jurisdiction_count = 0
-        self.assertEqual(len(jurisdictions), expected_jurisdiction_count)
+        assert len(jurisdictions) == expected_jurisdiction_count
 
     @responses.activate
     def test_get_subjurisdictions_counties_web01(self):
@@ -376,64 +372,60 @@ class TestJurisdiction(TestCase):
 
         # A state like AR has county sub-jurisdictions with results
         expected_subjurisdiction_count = 75
-        self.assertEqual(len(subjurisdictions), expected_subjurisdiction_count)
+        assert len(subjurisdictions) == expected_subjurisdiction_count
 
         # TODO: Actually check the values in subjurisdictions.
 
-    def test_report_url_xml(self):
-        election_urls = [
-            'https://results.enr.clarityelections.com/GA/Appling/52178/139522/en/summary.html',
-            "https://results.enr.clarityelections.com/CO/63746/",
-            "https://results.enr.clarityelections.com/CO/Boulder/43040/",
-            "https://results.enr.clarityelections.com/CO/Bogus/43040/",
-            "https://results.enr.clarityelections.com/AR/75879/",
-            "https://results.enr.clarityelections.com/PA/Allegheny/115752"
-        ]
-        expected_urls = [
-            'https://results.enr.clarityelections.com/GA/Appling/52178/139522/reports/detailxml.zip',
-            "https://results.enr.clarityelections.com/CO/63746/184388/reports/detailxml.zip",
-            None,  # Xml report not available
-            None,  # Bogus county
-            "https://results.enr.clarityelections.com/AR/75879/208723/reports/detailxml.zip",
-            "https://results.enr.clarityelections.com/PA/Allegheny/115752/316097/reports/detailxml.zip"
-        ]
-
-        for (election_url, expected_url) in dict(zip(election_urls, expected_urls)).items():
-            with self.subTest(election_url=election_url, expected_url=expected_url):
-                jurisdiction = Jurisdiction(url=election_url, level='county')
-                report_url = jurisdiction.report_url('xml')
-
-                if expected_url is None:
-                    self.assertIsNone(report_url)
-                else:
-                    self.assertEqual(report_url, expected_url)
+    @pytest.mark.parametrize("election_url, expected_url", [
+        ('https://results.enr.clarityelections.com/GA/Appling/52178/139522/en/summary.html', 'https://results.enr.clarityelections.com/GA/Appling/52178/139522/reports/detailxml.zip'),
+        ("https://results.enr.clarityelections.com/CO/63746/", "https://results.enr.clarityelections.com/CO/63746/184388/reports/detailxml.zip"),
+        ("https://results.enr.clarityelections.com/CO/Boulder/43040/", None),  # Xml report not available
+        ("https://results.enr.clarityelections.com/CO/Bogus/43040/", None),  # Bogus county
+        ("https://results.enr.clarityelections.com/AR/75879/", "https://results.enr.clarityelections.com/AR/75879/208723/reports/detailxml.zip"),
+        ("https://results.enr.clarityelections.com/PA/Allegheny/115752", "https://results.enr.clarityelections.com/PA/Allegheny/115752/316097/reports/detailxml.zip")
+    ])
+    def test_report_url_xml(self, election_url, expected_url):
+        jurisdiction = Jurisdiction(url=election_url, level='county')
+        report_url = jurisdiction.report_url('xml')
+        if expected_url is None:
+            assert report_url is None
+        else:
+            assert report_url == expected_url
 
     def test_report_url_txt(self):
         # Construct a Jurisdiction for Kentucky 2010 Primary Election
-        url = 'https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html'
+        # @emilymerwin on of 5/14/24:
+        # the URL I found here was bad:
+        # https://results.enr.clarityelections.com/KY/15261/30235/en/summary.html
+        # The closest I found was not a Clarity site:
+        # https://elect.ky.gov/results/2010-2019/Pages/2010primaryandgeneralelectionresults.aspx 
+        # I swapped it for the oldest Georgia election URL still available through Clarity
+
+        # Construct a Jurisdiction for the Georgia 2012 general election
+        url = 'https://results.enr.clarityelections.com/GA/42277/113204/en/summary.html'
         jurisdiction = Jurisdiction(url=url, level='county')
-        expected_url = 'https://results.enr.clarityelections.com/KY/15261/30235/reports/detailtxt.zip'
-        self.assertEqual(jurisdiction.report_url('txt'), expected_url)
+        expected_url = 'https://results.enr.clarityelections.com/GA/42277/113204/reports/detailtxt.zip'
+        assert jurisdiction.report_url('txt') == expected_url
 
     def test_report_url_xls(self):
         # Construct a Jurisdiction for Colorado 2014 General Election
         url = 'https://results.enr.clarityelections.com/CO/53335/149144/en/summary.html'
         jurisdiction = Jurisdiction(url=url, level='county')
         expected_url = 'https://results.enr.clarityelections.com/CO/53335/149144/reports/detailxls.zip'
-        self.assertEqual(jurisdiction.report_url('xls'), expected_url)
+        assert jurisdiction.report_url('xls') == expected_url
 
     def test_report_url_fake(self):
         # Construct a Jurisdiction for Colorado 2014 General Election
         url = "https://results.enr.clarityelections.com/CO/53335/149144/en/summary.html"
         jurisdiction = Jurisdiction(url=url, level="county")
-        self.assertIsNone(jurisdiction.report_url("fake"))
+        assert jurisdiction.report_url("fake") is None
 
     def test_summary_url(self):
         # Construct a Jurisdiction for Colorado 2014 General Election
         url = 'https://results.enr.clarityelections.com/CO/53335/149144/en/summary.html'
         jurisdiction = Jurisdiction(url=url, level='state')
         expected_url = 'https://results.enr.clarityelections.com/CO/53335/149144/reports/summary.zip'
-        self.assertEqual(jurisdiction.summary_url, expected_url)
+        assert jurisdiction.summary_url == expected_url
 
     @responses.activate
     def test_get_current_ver_state_web01_1st(self):
@@ -444,7 +436,7 @@ class TestJurisdiction(TestCase):
                       body='184388', status=200,
                       content_type='text/plain')
         current_ver = Jurisdiction.get_current_ver("https://results.enr.clarityelections.com/CO/63746/")
-        self.assertEqual(current_ver, "184388")
+        assert current_ver == "184388"
 
     @responses.activate
     def test_get_current_ver_state_web01_2nd(self):
@@ -455,7 +447,7 @@ class TestJurisdiction(TestCase):
                       body='149292', status=200,
                       content_type='text/plain')
         current_ver = Jurisdiction.get_current_ver("https://results.enr.clarityelections.com/AR/Arkansas/53239/")
-        self.assertEqual(current_ver, "149292")
+        assert current_ver == "149292"
 
     @responses.activate
     def test_get_current_ver_state_web02(self):
@@ -466,7 +458,7 @@ class TestJurisdiction(TestCase):
                       body='208723', status=200,
                       content_type='text/plain')
         current_ver = Jurisdiction.get_current_ver("https://results.enr.clarityelections.com/AR/75879/")
-        self.assertEqual(current_ver, "208723")
+        assert current_ver == "208723"
 
     @responses.activate
     def test_get_current_ver_county_legacy(self):
@@ -477,7 +469,7 @@ class TestJurisdiction(TestCase):
                       body='114182', status=200,
                       content_type='text/plain')
         current_ver = Jurisdiction.get_current_ver("https://results.enr.clarityelections.com/CO/Boulder/43040/")
-        self.assertEqual(current_ver, "114182")
+        assert current_ver == "114182"
 
     @responses.activate
     def test_get_current_ver_state_bogus(self):
@@ -488,7 +480,7 @@ class TestJurisdiction(TestCase):
                       body='', status=404,
                       content_type='text/plain')
         current_ver = Jurisdiction.get_current_ver("https://results.enr.clarityelections.com/BG/12345/")
-        self.assertIsNone(current_ver)
+        assert current_ver is None
 
     @responses.activate
     def test_get_current_ver_county_bogus(self):
@@ -499,29 +491,19 @@ class TestJurisdiction(TestCase):
                       body='', status=404,
                       content_type='text/plain')
         current_ver = Jurisdiction.get_current_ver("https://results.enr.clarityelections.com/CO/Bogus/43040/")
-        self.assertIsNone(current_ver)
+        assert current_ver is None
 
-    def test_get_latest_summary_url(self):
-        election_urls = [
-            "https://results.enr.clarityelections.com/CO/63746/",
-            "https://results.enr.clarityelections.com/CO/Boulder/43040/",
-            "https://results.enr.clarityelections.com/CO/Bogus/43040/",
-            "https://results.enr.clarityelections.com/AR/75879/",
-            "https://results.enr.clarityelections.com/PA/Allegheny/115752"
-        ]
-        expected_urls = [
-            "https://results.enr.clarityelections.com/CO/63746/184388/Web01/en/summary.html",
-            "https://results.enr.clarityelections.com/CO/Boulder/43040/114182/en/summary.html",
-            None,
-            "https://results.enr.clarityelections.com/AR/75879/208723/json/en/summary.json",
-            "https://results.enr.clarityelections.com/PA/Allegheny/115752/316097/json/en/summary.json"
-        ]
+    @pytest.mark.parametrize("election_url, expected_url", [
+        ("https://results.enr.clarityelections.com/CO/63746/","https://results.enr.clarityelections.com/CO/63746/184388/Web01/en/summary.html"),
+        ("https://results.enr.clarityelections.com/CO/Boulder/43040/","https://results.enr.clarityelections.com/CO/Boulder/43040/114182/en/summary.html"),
+        ("https://results.enr.clarityelections.com/CO/Bogus/43040/",None),
+        ("https://results.enr.clarityelections.com/AR/75879/","https://results.enr.clarityelections.com/AR/75879/208723/json/en/summary.json"),
+        ("https://results.enr.clarityelections.com/PA/Allegheny/115752","https://results.enr.clarityelections.com/PA/Allegheny/115752/316097/json/en/summary.json")
+    ])
+    def test_get_latest_summary_url(self, election_url, expected_url):
+        latest_summary_url = Jurisdiction.get_latest_summary_url(election_url)
+        if expected_url is None:
+            assert latest_summary_url is None
+        else:
+            assert latest_summary_url == expected_url
 
-        for (election_url, expected_url) in dict(zip(election_urls, expected_urls)).items():
-            with self.subTest(election_url=election_url, expected_url=expected_url):
-                latest_summary_url = Jurisdiction.get_latest_summary_url(election_url)
-
-                if expected_url is None:
-                    self.assertIsNone(latest_summary_url)
-                else:
-                    self.assertEqual(latest_summary_url, expected_url)
