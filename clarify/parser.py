@@ -233,7 +233,8 @@ class Parser(object):
             # mostly used for non-geographical quasi-jurisdictions.
             new_el = etree.Element('Precinct', {'name': name})
             parsed_el = self._parse_result_jurisdiction(new_el)
-            self.result_jurisdictions.append(parsed_el)
+            self._result_jurisdictions.append(parsed_el)
+            # FIXME: should parsed_el be added to _result_jurisdiction_lookup here too?
             return parsed_el
 
     def _get_or_create_result_jurisdiction(self, el):
