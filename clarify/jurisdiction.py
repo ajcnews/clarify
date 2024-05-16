@@ -72,7 +72,6 @@ class Jurisdiction(object):
             raise ValueError('Unsupported level')
         self.level = level
         self.name = name
-        self.summary_url = self._get_summary_url()
 
         if 'version' in self.parsed_url:
             self.current_ver = self.parsed_url['version']
@@ -80,6 +79,7 @@ class Jurisdiction(object):
             self.current_ver = self.get_current_ver(url)
             if self.current_ver:
                 self.parsed_url['version'] = self.current_ver
+        self.summary_url = self._get_summary_url()
 
     @classmethod
     def construct_url(cls, parsed_url, path, include_version=True):
