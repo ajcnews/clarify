@@ -339,7 +339,7 @@ class Jurisdiction(object):
             return None
 
     @classmethod
-    def get_response(cls, file_url):
+    def get_response(cls, file_url, timeout=5, max_retries=3):
         """
         Returns a response object.
         If file_url exists in _response_cache, return cached response.
@@ -352,7 +352,7 @@ class Jurisdiction(object):
 
         response = None
         if file_url not in cls._response_cache:
-            response = cls.safe_request(file_url)
+            response = cls.safe_request(file_url, timeout, max_retries)
             cls._response_cache[file_url] = response
 
         return cls._response_cache[file_url]
@@ -363,13 +363,13 @@ class Jurisdiction(object):
         """
         return self.construct_url(self.parsed_url, "reports/detail{}.zip".format(fmt))
 
-    def report_url(self, fmt):
+    def report_url(self, fmt, timeout=3, max_retries=5):
         """
         Returns link to detailed report depending on format. Formats are xls, txt and xml.
         Returns None if URL is unreachable
         """
         url = self._get_report_url(fmt)
-        if self.get_response(url):
+        if self.get_response(url, timeout, max_retries):
             return url
         return None
 
@@ -385,14 +385,14 @@ class Jurisdiction(object):
                 f.write(response.content)
 
     # TODO: write tests for this
-    def extract_and_download_report(self, fmt, output_dir=''):
+    def extract_and_download_report(self, fmt, output_dir='', timeout=5, max_retries=3):
         """
         Extracts the detail file from the enclosing .zip,
         renames it by state or jurisdiction
         and downloads the file to output_dir
         """
         url = self._get_report_url(fmt)
-        response = self.fetch_response(url)
+        response = self.get_response(url, timeout, max_retries)
         if response: # <Response [404]> is falsey apparently
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
