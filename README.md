@@ -44,7 +44,7 @@ The `Jurisdiction` object also provides access to any sub-jurisdiction details, 
 >>> subs[0].report_url('xml')
 'https://results.enr.clarityelections.com/GA/Baldwin/63997/183266/reports/detailxml.zip'
 ```
-
+#TODO: should probably mention the other option for downloading .zips and parsing them
 To download a jurisdiction or subjurisdiction's results file and extract the contents from the .zip:
 
 ```

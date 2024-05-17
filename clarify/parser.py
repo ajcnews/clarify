@@ -238,12 +238,22 @@ class Parser(object):
             return parsed_el
 
     def _get_or_create_result_jurisdiction(self, el):
+        """
+        Returns a jurisdiction object.
+        If jurisdiction exists in _result_jurisdiction_lookup, return it
+        Else:
+            - parse the XML el to create new ResultJurisdiction
+            - add new jurisdiction to _result_jurisdictions list
+            - add new jurisdiction to _result_jurisdiction_lookpup
+            - return it
+        """
+        # FIXME: get_result_jurisdiction needs refactoring and so does our except clause here
         try:
             return self.get_result_jurisdiction(el.attrib['name'])
         except KeyError:
-            # We don't yet know about this jurisdiction.  In some rare
-            # cases, there is a mismatch between jurisdictions in the
-            # ``VoterTurnout`` element and the ``VoteType`` elements.
+            # In some rare cases, there is a mismatch between
+            # jurisdictions in the ``VoterTurnout`` element
+            # and the ``VoteType`` elements.
             jurisdiction = self._parse_result_jurisdiction(el)
             self.add_result_jurisdiction(jurisdiction)
             return jurisdiction

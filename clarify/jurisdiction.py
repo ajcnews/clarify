@@ -8,6 +8,8 @@ import lxml.html
 from lxml.cssselect import CSSSelector
 from zipfile import ZipFile
 from io import BytesIO
+import time
+import logging
 
 # base_uri is the path prefix including the folloing named groups:
 # - state_id (required)
@@ -103,12 +105,16 @@ class Jurisdiction(object):
 
     @classmethod
     def get_current_ver(cls, election_url):
+        """
+        Return the current version, determined by first checking 
+        to see if 'version' is in the URL already, and if not,
+        reading it from current_ver.txt.
+        """
         parsed_url = cls._parse_url(election_url)
         # possible version filenames
         possible_filenames = ['current_ver.txt']
         ret = None
         for filename in possible_filenames:
-            # if we have already seen a 200-status response
             if ret is None:
                 current_ver_url = cls.construct_url(parsed_url, filename, include_version=False)
                 current_ver_response = cls.get_response(current_ver_url)
@@ -121,6 +127,11 @@ class Jurisdiction(object):
 
     @classmethod
     def get_latest_summary_url(cls, election_url):
+        """
+        Returns the summary.json report URL for a jurisdiction.
+        Note that _get_summary_url returns the url for
+        summary.zip (which contains summary.csv)
+        """
         parsed_url = cls._parse_url(election_url)
         current_ver = cls.get_current_ver(election_url)
 
@@ -297,6 +308,36 @@ class Jurisdiction(object):
             segment = tree.xpath("//script")[0].values()[0].split('/')[1]
         return '/' + segment + '/en/summary.html'
 
+    # TODO: add tests for this
+    @classmethod
+    def safe_request(cls, url, timeout=5, max_retries=3):
+        """
+        Make a request for `url` and return the response.
+        For HTTP errors, retry up to max_retries times.
+        Failures return None.
+        """
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(url, headers=UA_HEADER, timeout=5)
+                response.raise_for_status()
+                return response
+            except requests.exceptions.Timeout as e:
+                logging.error(f"Timeout Error for {url}: {str(e)} on attempt {attempt + 1}")
+                time.sleep(2**attempt) # Exponential backoff
+            except requests.exceptions.HTTPError as e:
+                if response.status_code in [500, 502, 504]:
+                    logging.error(f"Retryable HTTP Error for {url}: {str(e)} on attempt {attempt + 1}")
+                    time.sleep(2**attempt)
+                else:
+                    logging.error(f"Non-retryable HTTP Error for {url}: {str(e)}")
+                    break
+            except requests.exceptions.RequestException as e:
+                logging.error(f"Request Error for {url}: {str(e)}")
+                break  # Break on non-retryable errors
+        else:
+            logging.error(f"All retries failed for {url}")
+            return None
+
     @classmethod
     def get_response(cls, file_url):
         """
@@ -311,13 +352,7 @@ class Jurisdiction(object):
 
         response = None
         if file_url not in cls._response_cache:
-            try:
-                response = requests.get(file_url, headers=UA_HEADER)
-                response.raise_for_status()
-            except requests.RequestException as e:
-                # Create a mock response for error handling
-                response = requests.models.Response()
-                response.status_code = 404 # Assume not found if error
+            response = cls.safe_request(file_url)
             cls._response_cache[file_url] = response
 
         return cls._response_cache[file_url]
@@ -371,7 +406,9 @@ class Jurisdiction(object):
 
     def _get_summary_url(self):
         """
-        Returns the summary report URL for a jurisdiction.
+        Returns the URL for the summary.zip report for a jurisdiction.
+        Note that get_latest_summary_url returns the url for
+        summary.json
         """
         url = self.construct_url(self.parsed_url, "reports/summary.zip")
         r = self.get_response(url)
