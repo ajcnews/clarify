@@ -121,7 +121,7 @@ class Jurisdiction(object):
                 try:
                     current_ver_response.raise_for_status()
                     ret = current_ver_response.text
-                except requests.exceptions.HTTPError:
+                except:
                     ret = None
         return ret
 
