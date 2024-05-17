@@ -385,10 +385,10 @@ class Jurisdiction(object):
                 f.write(response.content)
 
     # TODO: write tests for this
-    def extract_and_download_report(self, fmt, output_dir='', timeout=5, max_retries=3):
+    def extract_and_download_report(self, fmt, output_dir='', filename='', timeout=5, max_retries=3):
         """
         Extracts the detail file from the enclosing .zip,
-        renames it by state or jurisdiction
+        renames it to {filename}.{fmt}
         and downloads the file to output_dir
         """
         url = self._get_report_url(fmt)
@@ -399,8 +399,8 @@ class Jurisdiction(object):
             with ZipFile(BytesIO(response.content)) as z0:
                 with z0.open(f'detail.{fmt}') as f0:
                     contents = f0.read()
-                    filename = self.parsed_url.get("state_id", '') if self.level == "state" else self.name
-                    # Write the XML file to the county_results folder
+                    if not filename:
+                        filename = self.parsed_url["state_id"] if self.level == "state" else self.name.replace(' ','_').lower()
                     with open(f"{output_dir}/{filename}.{fmt}", 'wb') as f3:
                         f3.write(contents)
 
