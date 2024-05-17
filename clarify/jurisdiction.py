@@ -388,7 +388,8 @@ class Jurisdiction(object):
     def extract_and_download_report(self, fmt, output_dir='', filename='', timeout=5, max_retries=3):
         """
         Extracts the detail file from the enclosing .zip,
-        renames it to {filename}.{fmt}
+        renames it to {filename}.{fmt} or
+        falls back to {state_id or jurisdiction.name}.{fmt}
         and downloads the file to output_dir
         """
         url = self._get_report_url(fmt)
