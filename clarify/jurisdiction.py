@@ -366,7 +366,7 @@ class Jurisdiction(object):
     def report_url(self, fmt, timeout=3, max_retries=5):
         """
         Returns link to detailed report depending on format. Formats are xls, txt and xml.
-        Returns None if URL is unreachable
+        Returns None if URL is unreachable.
         """
         url = self._get_report_url(fmt)
         if self.get_response(url, timeout, max_retries):
@@ -389,7 +389,7 @@ class Jurisdiction(object):
         """
         Extracts the detail file from the enclosing .zip,
         renames it to {filename}.{fmt} or
-        falls back to {state_id or jurisdiction.name}.{fmt}
+        falls back to {parsed_url.state_id or parsed_url.jurisdiction_name}.{fmt}
         and downloads the file to output_dir
         """
         url = self._get_report_url(fmt)
@@ -401,7 +401,7 @@ class Jurisdiction(object):
                 with z0.open(f'detail.{fmt}') as f0:
                     contents = f0.read()
                     if not filename:
-                        filename = self.parsed_url["state_id"] if self.level == "state" else self.name.replace(' ','_').lower()
+                        filename = self.parsed_url['state_id'] if self.level == 'state' else self.parsed_url.get('jurisdiction_name', f'detail{fmt}')
                     with open(f"{output_dir}/{filename}.{fmt}", 'wb') as f3:
                         f3.write(contents)
 
