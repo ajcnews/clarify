@@ -46,10 +46,16 @@ class Parser(object):
         self.election_name = self._parse_election_name(tree)
         self.election_date = self._parse_election_date(tree)
         self.region = self._parse_region(tree)
-        self.total_voters = int(election_voter_turnout[0])
-        self.ballots_cast = int(election_voter_turnout[1])
-        self.voter_turnout = float(election_voter_turnout[2])
-
+        # sometimes state level files don't include the turnout attributes
+        # see https://results.enr.clarityelections.com/GA/105369/web.264614/#/summary
+        try:
+            self.total_voters = int(election_voter_turnout[0])
+            self.ballots_cast = int(election_voter_turnout[1])
+            self.voter_turnout = float(election_voter_turnout[2])
+        except:
+            self.total_votes = None
+            self.ballots_cast = None
+            self.voter_turnout = None
         self._result_jurisdictions = self._parse_result_jurisdictions(tree)
         self._result_jurisdiction_lookup = {j.name: j for j in self._result_jurisdictions}
         self._contests = self._parse_contests(tree)
